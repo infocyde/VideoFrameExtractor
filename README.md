@@ -11,3 +11,5 @@ More instructions later, but for the not faint at heart who know python.
 7. type `streamlit run .\app.py` (or whatever your relative path is)
 
 If everything worked a web window will start, you can drag a video file on the drag spot, and after a few moments the first and last frame of the video will be extracted.
+
+Currently the original video and the extracted first and last frames are saved in a folder in the same directory called 'uploaded_videos'
