@@ -62,13 +62,13 @@ if uploaded_file is not None:
 
     if first_frame:
         st.success(f"✅ First frame saved: {first_frame.name}")
-        st.image(str(first_frame), caption="First Keyframe", use_container_width=True)
+        st.image(str(first_frame), caption="First Keyframe", width='stretch')
     else:
         st.error("❌ Could not extract the first frame.")
 
     if last_frame:
         st.success(f"✅ Last frame saved: {last_frame.name}")
-        st.image(str(last_frame), caption="Last Keyframe", use_container_width=True)
+        st.image(str(last_frame), caption="Last Keyframe", width='stretch')
     else:
         st.error("❌ Could not extract the last frame.")
 
