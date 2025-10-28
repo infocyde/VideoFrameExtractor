@@ -1,23 +1,23 @@
 import streamlit as st
 import os
 import cv2
-# from moviepy.editor import VideoFileClip
+import numpy as np
 from moviepy import VideoFileClip
 from pathlib import Path
+from PIL import Image
 
 st.set_page_config(page_title="Video Keyframe Extractor", layout="centered")
 st.title("🎬 Extract First and Last Keyframes")
 
 uploaded_file = st.file_uploader("Upload a video file", type=["mp4", "mov", "avi", "mkv", "webm"])
 
-def extract_keyframes(video_path):
+def extract_keyframes_hq(video_path):
     """
-    Extracts the first and last keyframes from a video and saves them as PNGs.
-    Returns file paths for display.
+    Extracts the first and last keyframes from a video at highest quality.
+    Uses moviepy for better frame extraction.
     """
     clip = VideoFileClip(video_path)
     duration = clip.duration
-    cap = cv2.VideoCapture(video_path)
 
     # Prepare file paths
     video_name = Path(video_path).stem
@@ -26,23 +26,36 @@ def extract_keyframes(video_path):
     first_frame_path = parent_dir / f"{video_name}_first.png"
     last_frame_path = parent_dir / f"{video_name}_last.png"
 
-    # --- First frame ---
-    cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
-    success, frame = cap.read()
-    if success:
-        cv2.imwrite(str(first_frame_path), frame, [cv2.IMWRITE_PNG_COMPRESSION, 0])
-    else:
+
+
+    #FYI
+    # For TIFF (lossless, larger files):
+    #first_frame_pil.save(str(first_frame_path), 'TIFF', compression='none')
+
+    # For high-quality JPEG (smaller files, minimal loss):
+    #first_frame_pil.save(str(first_frame_path), 'JPEG', quality=100, subsampling=0)
+
+    # --- Extract first frame using moviepy (better quality) ---
+    try:
+        first_frame = clip.get_frame(0)  # Get frame at t=0
+        # Convert RGB to BGR for consistency if needed, or save directly
+        first_frame_pil = Image.fromarray(first_frame)
+        first_frame_pil.save(str(first_frame_path), 'PNG', compress_level=0)  # No compression
+    except Exception as e:
+        st.warning(f"Could not extract first frame: {e}")
         first_frame_path = None
 
-    # --- Last frame ---
-    cap.set(cv2.CAP_PROP_POS_MSEC, (duration - 0.1) * 1000)
-    success, frame = cap.read()
-    if success:
-        cv2.imwrite(str(last_frame_path), frame, [cv2.IMWRITE_PNG_COMPRESSION, 0])
-    else:
+    # --- Extract last frame ---
+    try:
+        # Get frame slightly before the end to avoid edge cases
+        last_frame_time = max(0, duration - 0.1)
+        last_frame = clip.get_frame(last_frame_time)
+        last_frame_pil = Image.fromarray(last_frame)
+        last_frame_pil.save(str(last_frame_path), 'PNG', compress_level=0)  # No compression
+    except Exception as e:
+        st.warning(f"Could not extract last frame: {e}")
         last_frame_path = None
 
-    cap.release()
     clip.close()
     return first_frame_path, last_frame_path
 
@@ -58,7 +71,7 @@ if uploaded_file is not None:
 
     st.write("Processing video… ⏳")
 
-    first_frame, last_frame = extract_keyframes(str(video_path))
+    first_frame, last_frame = extract_keyframes_hq(str(video_path))
 
     if first_frame:
         st.success(f"✅ First frame saved: {first_frame.name}")
